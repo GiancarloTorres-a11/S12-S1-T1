@@ -2,6 +2,7 @@ require('dotenv').config();
 const express = require('express');
 const cors = require('cors');
 const mongoose = require('mongoose');
+const { MongoMemoryServer } = require('mongodb-memory-server');
 
 const productRoutes = require('./routes/productRoutes');
 const categoryRoutes = require('./routes/categoryRoutes');
@@ -35,9 +36,12 @@ app.get('/', (req, res) => {
 });
 
 // Conexión MongoDB
-mongoose.connect(process.env.MONGO_URI)
-  .then(() => {
-    console.log('✅ Conectado a MongoDB');
+async function connectDB() {
+  try {
+    const mongoServer = await MongoMemoryServer.create();
+    const mongoUri = mongoServer.getUri();
+    await mongoose.connect(mongoUri);
+    console.log('✅ Conectado a MongoDB (en memoria)');
     console.log(`🚀 http://localhost:${PORT}`);
     console.log('  POST /api/users/register');
     console.log('  POST /api/users/login');
@@ -46,10 +50,12 @@ mongoose.connect(process.env.MONGO_URI)
     app.listen(PORT, () => {
       console.log(`✅ Servidor activo`);
     });
-  })
-  .catch(err => {
+  } catch (err) {
     console.error('❌ MongoDB error:', err.message);
-  });
+  }
+}
+
+connectDB();
 
 // 404
 app.use((req, res) => {
